@@ -9,6 +9,11 @@ export function initTg() {
     tg?.setBackgroundColor?.('#0d0e10')
     tg?.disableVerticalSwipes?.()
   } catch { /* старый клиент Telegram */ }
+  try {
+    // Полный экран — только на телефоне: на компьютере он занял бы весь монитор
+    const phone = tg?.platform === 'ios' || tg?.platform === 'android'
+    if (phone && tg?.isVersionAtLeast?.('8.0') && !tg.isFullscreen) tg.requestFullscreen()
+  } catch { /* клиент не умеет полноэкранный режим — остаёмся в обычном */ }
 }
 
 export const tgName: string = tg?.initDataUnsafe?.user?.first_name ?? ''
