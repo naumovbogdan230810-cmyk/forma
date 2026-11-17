@@ -35,6 +35,45 @@ const QUERY = {
   pushdown: 'Разгибание рук на верхнем блоке трицепс техника',
   db_curl: 'Подъём гантелей на бицепс стоя техника выполнения',
   treadmill: 'Ходьба на беговой дорожке в гору как правильно',
+  wide_pushup: 'Широкие отжимания от пола техника',
+  decline_pushup: 'Отжимания с ногами на возвышенности техника',
+  prone_y: 'Упражнение Y лёжа на животе подъём рук',
+  chinup: 'Подтягивания обратным хватом техника выполнения',
+  band_pulldown: 'Вертикальная тяга резины к груди техника',
+  superman_pull: 'Супермен с тягой локтей упражнение для спины',
+  band_row: 'Тяга резины к поясу техника',
+  glute_bridge: 'Ягодичный мост техника выполнения',
+  hyperext: 'Гиперэкстензия техника выполнения',
+  db_lunge: 'Выпады с гантелями техника выполнения',
+  single_calf: 'Подъём на носок на одной ноге техника',
+  db_calf: 'Подъём на носки с гантелями стоя техника',
+  band_curl: 'Сгибание рук на бицепс с резиной стоя техника',
+  db_ext: 'Разгибание рук с гантелью из-за головы техника выполнения',
+  jumping_jack: 'Jumping Jack техника выполнения упражнение',
+  shoulder_machine: 'Жим в тренажёре на плечи сидя техника выполнения',
+  mountain: 'Упражнение альпинист техника выполнения',
+}
+
+// Что обязано быть в названии ролика (must) и чего быть не должно (not: название или канал)
+const RULES = {
+  wide_pushup: { must: /широк/i },
+  decline_pushup: { must: /возвыш|скамь|опор|ноги на|ногами на/i },
+  prone_y: { must: /(^|[^a-zа-я])y([^a-zа-я]|$)|игрек/i },
+  chinup: { must: /обратн/i, not: /сравнен/i },
+  band_pulldown: { must: /резин|эспандер|петл/i, not: /прямых руках|прямыми руками/i },
+  superman_pull: { must: /супермен/i },
+  db_row: { must: /одной рук/i },
+  band_row: { must: /резин|эспандер|петл/i, not: /в наклоне/i },
+  glute_bridge: { must: /ягодичн\S* мост/i, not: /штанг|одной|neuroapps/i },
+  hyperext: { must: /гиперэкстенз/i, not: /калечит|убить/i },
+  db_lunge: { must: /гантел/i },
+  single_calf: { must: /одной ног/i },
+  db_calf: { must: /гантел/i },
+  band_curl: { must: /резин|эспандер|петл/i, not: /колено/i },
+  db_ext: { must: /из-?\s?за головы/i, not: /VOD/ },
+  jumping_jack: { must: /jumping|джампинг|зв[её]зд/i, not: /clash/i },
+  shoulder_machine: { must: /тренаж/i, not: /hammer strength|lifefitness/i },
+  mountain: { must: /альпинист|скалолаз/i, not: /neuroapps/i },
 }
 const sleep =(ms) => new Promise((r) => setTimeout(r, ms))
 const seconds =(t = '') => t.split(':').reduce((a, x) => a * 60 + Number(x), 0)
@@ -61,8 +100,11 @@ async function embeddable(id) {
 
 async function pick(ex) {
   const found = await search(QUERY[ex.id] ?? `${ex.name} техника выполнения`)
-  for (const c of found.slice(0, 12)) {
+  const rule = RULES[ex.id]
+  for (const c of found.slice(0, rule ? 20 : 12)) {
     if (c.len < 20 || c.len > 900) continue
+    if (rule?.must && !rule.must.test(c.t)) continue
+    if (rule?.not && rule.not.test(`${c.t} ${c.ch}`)) continue
     if (await embeddable(c.v)) return { v: c.v, t: c.t, ch: c.ch }
   }
   return null
